@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Executes thyme whith its parameters.
+/etc/cron.daily/thyme.sh -b -r -p /media/fanf/partage/fanf/thyme

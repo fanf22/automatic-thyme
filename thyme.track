@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# To avoid typo errors...
+output_file=/live_capture/live_capture.json
+
+# Quick help display function.
+usage()
+{
+	echo -e "Usage: $0 -p <base directory>"
+	echo -e "\t-p\tApplication base directory."
+}
+
+# Export the display environment variable.
+export DISPLAY=:0
+
+# We have to have the exact number of arguments.
+if [[ $# -ne 2 ]]; then
+	usage
+	exit 1
+else
+	case $1 in
+		-p)
+			path=$2;;
+		 *)
+			usage
+			exit 1;;
+	esac
+fi
+
+
+# Executes thyme track 4 times per minute and reports the result.
+for i in $(seq 4); do
+	thyme track -o $path/$output_file
+	if [[ $i -le 3 ]]; then
+		sleep 15
+	fi
+done
+
+exit 0
+
