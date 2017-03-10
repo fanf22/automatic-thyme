@@ -1,40 +1,76 @@
 #!/bin/bash
 
-# To avoid typo errors...
-output_file=/live_capture/live_capture.json
+# Stored paths and filenames to avoid typo errors...
+live_capture_file_path=live_capture
+output_file_path=reports/today
+backup_file_path=reports/backups
+output_file=$(date +%Y-%m-%d--%H:%M:%S)_applications_track_daily_report.html
+live_capture_file=live_capture.json
 
-# Quick help display function.
+# How to dirty retain which option is set or not... ^^
+set_option_b=false
+set_option_r=false
+
+# Quick help display function
 usage()
 {
-	echo -e "Usage: $0 -p <base directory>"
-	echo -e "\t-p\tApplication base directory."
+	echo -e "Usage: $0 [-br] -p <base directory>"
+	echo -e "\t-b\tbackup old HTML reports."
+	echo -e "\t-p\tapplication base directory."
+	echo -e "\t-r\tremove live tracking JSON file."
 }
 
-# Export the display environment variable.
-export DISPLAY=:0
-
-# We have to have the exact number of arguments.
-if [[ $# -ne 2 ]]; then
+# Arguments number verification.
+if [[ $# -lt 1 || $# -gt 4 ]]; then
 	usage
 	exit 1
-else
+fi
+
+# Reading arguments.
+while [[ $# ]]; do
+	if [[ $# -eq 0 ]]; then
+		break
+	fi
 	case $1 in
 		-p)
-			path=$2;;
+			path=$2
+			shift 2;;
+		-b)
+			set_option_b=true
+			shift;;
+		-r)
+			set_option_r=true
+			shift;;
 		 *)
 			usage
 			exit 1;;
 	esac
-fi
-
-
-# Executes thyme track 4 times per minute and reports the result.
-for i in $(seq 4); do
-	thyme track -o $path/$output_file
-	if [[ $i -le 3 ]]; then
-		sleep 15
-	fi
 done
 
-exit 0
+# Checking directories existence.
+if   [[ ! -d $path ]]; then
+	mkdir $path
+elif [[ ! -d $path/$live_capture_file_path ]]; then
+	mkdir $path/$live_capture_file_path
+elif [[ ! -d $path/$output_file_path ]]; then
+	mkdir $path/$output_file_path 
+elif [[ ! -d $path/$backup_file_path ]]; then
+	mkdir $path/$backup_file_path
+fi
+
+# Checking of HTML report status.
+if [[ ! $set_option_b ]]; then
+	rm -f $path/$output_file_path/*
+fi
+
+# Backup current HTML report.
+mv $path/$output_file_path/* $path/$backup_file_path
+
+# Generating HTML report.
+thyme show -i $path/$live_capture_file_path/$live_capture_file -w stats > $path/$output_file_path/$output_file
+
+# Checking files existence and actions which must be taken.
+if [[ -f $path/$live_capture_file_path/$live_capture_file && $set_option_r ]]; then
+	rm -f $path/$live_capture_file_path/$live_capture_file
+fi
 
